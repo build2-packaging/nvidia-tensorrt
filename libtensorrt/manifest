@@ -1,13 +1,18 @@
 : 1
 name: libtensorrt
 version: 10.8.0
-language: c
-project: sw-build2-tensorrt
+upstream-version: 10.8.0.43
+type: lib,binless
+language: c++
+project: nvidia-tensorrt
 summary: NVIDIA TensorRT
-license: other: proprietary ; Not free/open source.
+license: other: TensorRT ; https://docs.nvidia.com/deeplearning/tensorrt/latest/reference/sla.html
 description-file: README.md
-package-description-file: PACKAGE-README.md
 url: https://developer.download.nvidia.com/compute/machine-learning
+email: NVSDKIssues@nvidia.com
+package-email: packaging@build2.org ; Mailing list.
+build-error-email: helmesjo@gmail.com
+builds: none; Times out downloading large binaries
 depends: * build2 >= 0.17.0
 depends: * bpkg >= 0.17.0
 depends: libcudart

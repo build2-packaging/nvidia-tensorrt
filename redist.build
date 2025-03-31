@@ -12,7 +12,12 @@ redist{~'/(.+)/'}:
   manifest = ($<[0])
   redist   = ($<[1])
 
+  # 'b dist' may cap width, so join escaped lines.
   cat $path($manifest) \
+    | set m [strings]
+  m = $regex.apply($m, '\\\n', '')
+
+  echo $m \
     | sed -n -e 's/^url:\s*(.*)$/\1/p' \
     | set url [string]
 

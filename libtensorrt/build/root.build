@@ -6,3 +6,8 @@ using cxx
 
 hxx{*}: extension = h
 cxx{*}: extension = cpp
+
+# Only Windows is currently supported.
+#
+if ($cc.target.class != 'windows')
+  fail 'Only Windows is currently supported'
