@@ -1,0 +1,8 @@
+# Uncomment to suppress warnings coming from external libraries.
+#
+#cxx.internal.scope = current
+
+using cxx
+
+hxx{*}: extension = h
+cxx{*}: extension = cpp

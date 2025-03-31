@@ -1,0 +1,6 @@
+$out_root/
+{
+  include libtensorrt/
+}
+
+export $out_root/libtensorrt/$import.target

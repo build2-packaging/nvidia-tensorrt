@@ -1,0 +1,6 @@
+import libs = libtensorrt%lib{tensorrt}
+# make sure executables are importable
+import! all = \
+  libtensorrt%exe{trtexec}
+
+exe{driver}: cxx{**} $libs testscript{**} $all

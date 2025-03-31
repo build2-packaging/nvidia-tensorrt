@@ -1,0 +1,131 @@
+import intf_libs = libcudart%libs{cudart}
+
+name = $regex.replace($project, 'lib', '')
+
+source redist.build
+define [see_through] import: group
+
+./: libs{$name}: $intf_libs import{$name}
+
+redist{lib$name}: $src_root/manifest $src_base/redistrib.json
+archive{$cc.target.class-$cc.target.cpu-$version-archive.tar}: redist{lib$name}
+extract{archive}: archive{$cc.target.class-$cc.target.cpu-$version-archive.tar}
+import{$name}: extract{archive}: update = match
+
+import{$name}:
+{{
+  o = $directory($>[0])
+  d = $directory($>[0])/$name($>[0]).files
+
+  o = $directory($>[0])
+  d = $directory($>[0])/$name($>[0]).files
+
+  find "$out_base/bin/" -type f -name "*" \
+    | set -n l [paths]
+  find "$out_base/lib/" -type f -name "*" \
+    | set -n i [paths]
+  i = $regex.filter_out_search($i, '.*static.*')
+  find "$out_base/include/" -type f -name "*" \
+    | set -n h [paths]
+
+  depdb dyndep \
+    --dyn-target \
+    --target-cwd "$o" \
+    --target-what 'imported files' \
+    --target-default-type 'h' \
+    --target-extension-type '=hxx' \
+    --target-extension-type 'h=hxx' \
+    --target-extension-type 'hpp=hxx' \
+    --target-extension-type 'so=libs' \
+    --target-extension-type 'dylib=libs' \
+    --target-extension-type 'dll=libs' \
+    --target-extension-type 'lib=libi' \
+    --format lines \
+    --file $d \
+    -- \
+      echo $regex.merge($l $i $h, '(.+)', '\1\n') >$d
+
+  diag import $>
+
+  for t : $filter_out($>, group)
+    touch $path($t)
+  end
+}}
+
+## create phony libs{<name>} such that we can export a
+#  deterministic libs{} target, and generate a single
+#  libi{<name>} from all extracted import libraries.
+<libs{$(name).dll} libi{$(name).dll.lib}>:
+{{
+  n    = $name($>[0])
+  libs = ($filter($<, libi))
+
+  $effect($bin.ld.path) -DUMP -NOLOGO -HEADERS $path($libs[0]) \
+   | sed -n -e 's/.*machine \((.*)\)/\1/p' \
+   | set -w m
+  m = ($m[0])
+
+  # extract all import libraries
+  implibs =
+  for l : $libs
+    $effect($bin.ld.path) -DUMP -NOLOGO -HEADERS $path($l) | \
+      sed -n -e 's/idata//p' | \
+      set i [string]
+
+    if (!$empty($i))
+      impllibs += $l
+    end
+  end
+
+  diag $name($bin.ar.path) $impllibs $>
+
+  # create a dummy libs{<name>} as this is only acting as
+  # an 'alias' target, essentially creating a phony lib.
+  touch "$path($>[0])"
+
+  # combine all import libraries to one
+  $effect($bin.ar.path) -NOLOGO "-OUT:$path($>[1])" \
+                        "-NAME:$n" "-MACHINE:$m" $path($impllibs) >! 2>&1
+}}
+
+## symlink exe{<name>} files to the actual executable
+#  such that we can export a deterministic exe{} target
+./: \
+exe{trtexec.exe} \
+: extract{archive}
+{{
+  find "$out_base/bin" -type f -name "*$leaf($path($>))*" \
+    | set e [path]
+
+  diag ln $> -> $e
+
+  # create symlink to actual target
+  test -f "$path($>)" || ln --symbolic "$e" "$path($>)"
+  touch "$path($>)"
+}}
+
+if ($cc.target.system == 'mingw32')
+  cc.loptions += -Wl,--export-all-symbols
+
+# Export options.
+
+lib{$name}:
+{
+  cc.type = cc
+  cc.export.poptions = "-I$out_base/include"
+  cc.export.libs = $intf_libs
+}
+
+lib/liba{**}: install = false
+
+exe{*}:
+{
+  install         = bin/
+  install.subdirs = true
+}
+
+include/hxx{*}:
+{
+  install         = include/$project/
+  install.subdirs = true
+}

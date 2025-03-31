@@ -1,0 +1,13 @@
+: 1
+name: libtensorrt
+version: 10.8.0
+language: c
+project: sw-build2-tensorrt
+summary: NVIDIA TensorRT
+license: other: proprietary ; Not free/open source.
+description-file: README.md
+package-description-file: PACKAGE-README.md
+url: https://developer.download.nvidia.com/compute/machine-learning
+depends: * build2 >= 0.17.0
+depends: * bpkg >= 0.17.0
+depends: libcudart
