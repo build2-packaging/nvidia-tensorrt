@@ -1,5 +1,14 @@
 # libtensort - A C++ library
 
+> **NOTE:**  
+This package is not open source and does not contain any source code. Instead,
+in order to "build" the exported target(s) it downloads (potentially large)
+pre-built binaries provided by NVIDIA for the target platform.
+>
+> CI for this package is disabled due to the above.  
+Supported platforms/compilers are Windows/MSVC. Linux binaries exist but are
+currently not available through this package.
+
 NVIDIA® TensorRT™ is a C++ library that facilitates high-performance inference
 on NVIDIA GPUs. TensorRT takes a trained network, which consists of a network
 definition and a set of trained parameters, and produces a highly optimized

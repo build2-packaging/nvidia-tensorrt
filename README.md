@@ -1,5 +1,14 @@
 # NVIDIA® TensorRT™ SDK
 
+> **NOTE:**  
+These packages are not open source and do not contain any source code. Instead,
+in order to "build" the exported target(s) they download (potentially large)
+pre-built binaries provided by NVIDIA for the target platform.
+>
+> CI for these packages are disabled due to the above.  
+Supported platforms/compilers are Windows/MSVC. Linux binaries exist but are
+currently not available through these packages.
+
 This is a `build2` package repository for [NVIDIA® TensorRT™ SDK](https://developer.nvidia.com/tensorrt).
 
 NVIDIA TensorRT is an SDK for high-performance deep learning inference,

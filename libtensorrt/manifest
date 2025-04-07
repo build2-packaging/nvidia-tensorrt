@@ -1,6 +1,6 @@
 : 1
 name: libtensorrt
-version: 10.8.0+1
+version: 10.8.0+2
 upstream-version: 10.8.0.43
 type: lib,binless
 language: c++
