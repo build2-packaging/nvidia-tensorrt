@@ -1,4 +1,4 @@
-import intf_libs = libcudart%libs{cudart}
+import intf_libs = cuda-cudart%libs{cudart}
 
 name = $regex.replace($project, 'lib', '')
 

@@ -1,7 +1,7 @@
 : 1
 name: libtensorrt
 version: 10.13.3-a.0.z
-upstream-version: 10.8.0.43
+upstream-version: 10.13.3.43
 type: lib,binless
 language: c++
 project: nvidia-tensorrt
@@ -15,4 +15,4 @@ build-error-email: helmesjo@gmail.com
 builds: none; Times out downloading large binaries
 depends: * build2 >= 0.17.0
 depends: * bpkg >= 0.17.0
-depends: libcudart ^ 12.8.0
+depends: cuda-cudart ^ 13.0.1

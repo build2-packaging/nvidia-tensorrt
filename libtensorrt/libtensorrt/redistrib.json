@@ -1,25 +1,25 @@
 {
-    "release_date": "2025-01-23",
-    "release_label": "10.8.0",
+    "release_date": "2025-09-08",
+    "release_label": "10.13.3",
     "release_product": "NVIDIA TensorRT",
     "libtensorrt": {
         "name": "TensorRT",
         "license": "NVIDIA TensorRT",
-        "version": "10.8.0",
+        "version": "10.13.3",
         "linux-x86_64": {
-            "relative_path": "libtensorrt/linux-x86_64/TensorRT-10.8.0.43.Linux.x86_64-gnu.cuda-12.8.tar.gz",
+            "relative_path": "libtensorrt/linux-x86_64/TensorRT-10.13.3.9.Linux.x86_64-gnu.cuda-13.0.tar.gz",
             "sha256": "",
             "md5": "",
             "size": ""
         },
         "linux-aarch64": {
-            "relative_path": "tensorrt/10.8.0/TensorRT-10.8.0.43.Linux.aarch64-gnu.cuda-12.8.tar.gz",
+            "relative_path": "tensorrt/10.13.3/TensorRT-10.13.3.9.Linux.aarch64-gnu.cuda-13.0.tar.gz",
             "sha256": "",
             "md5": "",
             "size": ""
         },
         "windows-x86_64": {
-            "relative_path": "tensorrt/10.8.0/zip/TensorRT-10.8.0.43.Windows.win10.cuda-12.8.zip",
+            "relative_path": "tensorrt/10.13.3/zip/TensorRT-10.13.3.9.Windows.win10.cuda-13.0.zip",
             "sha256": "",
             "md5": "",
             "size": ""
