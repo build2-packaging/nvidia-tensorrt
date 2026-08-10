@@ -13,6 +13,6 @@ email: NVSDKIssues@nvidia.com
 package-email: packaging@build2.org ; Mailing list.
 build-error-email: helmesjo@gmail.com
 builds: none; Times out downloading large binaries
-depends: * build2 >= 0.17.0
-depends: * bpkg >= 0.17.0
+depends: * build2 >= 0.18.0
+depends: * bpkg >= 0.18.0
 depends: cuda-cudart ^ 13.0.2

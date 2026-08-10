@@ -1,0 +1,20 @@
+{
+  "baseUrl": "https://developer.download.nvidia.com/compute/machine-learning",
+  "includeDirs": ["include"],
+  "ccType": "cc",
+  "binless": false,
+  "platforms": {
+    "x86_64-windows": {
+      "relativePath": "tensorrt/10.14.1/zip/TensorRT-10.14.1.48.Windows.win10.cuda-13.0.zip",
+      "version": "10.14.1"
+    },
+    "x86_64-linux": {
+      "relativePath": "tensorrt/10.14.1/tars/TensorRT-10.14.1.48.Linux.x86_64-gnu.cuda-13.0.tar.gz",
+      "version": "10.14.1"
+    },
+    "aarch64-linux": {
+      "relativePath": "tensorrt/10.14.1/tars/TensorRT-10.14.1.48.Linux.aarch64-gnu.cuda-13.0.tar.gz",
+      "version": "10.14.1"
+    }
+  }
+}

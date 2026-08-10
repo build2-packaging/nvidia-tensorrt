@@ -1,3 +1,21 @@
 # Generated version header.
 #
 version.hxx
+
+# Extracted redistributable archive contents (see redist.build) and its
+# forwarded-config backlinks.
+#
+*.so*
+*.dll
+*.lib
+/include/*.h
+/include/*.hxx
+
+# Linux executables have no extension to match on.
+#
+/bin/trtexec
+/bin/tensorrt_player
+
+# Downloaded archive symlink.
+#
+/tensorrt-*

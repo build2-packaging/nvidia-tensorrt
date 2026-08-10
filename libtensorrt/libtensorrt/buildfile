@@ -1,130 +1,192 @@
 import intf_libs = cuda-cudart%libs{cudart}
 
-name = $regex.replace($project, 'lib', '')
-
-source redist.build
 define [see_through] import: group
 
-./: libs{$name}: $intf_libs import{$name}
+name = $string.replace($project, 'lib', '')
 
-redist{lib$name}: $src_root/manifest $src_base/redistrib.json
-archive{$cc.target.class-$cc.target.cpu-$version-archive.tar}: redist{lib$name}
-extract{archive}: archive{$cc.target.class-$cc.target.cpu-$version-archive.tar}
-import{$name}: extract{archive}: update = match
+source redist.build
 
-import{$name}:
+manifest_json = [json_object] $json.load($src_base/manifest.json)
+package_ver   = "$(version.major).$(version.minor).$(version.patch)"
+
+pub_hdrs = [strings]
+for d: [json_array] ($manifest_json["includeDirs"])
+{
+  dir = [string] $d
+  pub_hdrs += "-I$out_base/$dir"
+}
+
+for plat: [json_object] ($manifest_json["platforms"])
+{
+  plat_key = $member_name($plat)
+  enabled  = [bool] ($cc.target.cpu-$cc.target.class == $plat_key)
+  archive{$name-$plat_key-$package_ver}: $src_base/manifest.json: include = $enabled
+  extract{$name}: archive{$name-$plat_key-$package_ver}: include = $enabled
+}
+
+import{$name-headers}: extract{$name}: update = match
+
+import{$name-headers}:
 {{
   o = $directory($>[0])
-  d = $directory($>[0])/$name($>[0]).files
+  d = $o/$name($>[0]).files
 
-  o = $directory($>[0])
-  d = $directory($>[0])/$name($>[0]).files
-
-  find "$out_base/bin/" -type f -name "*" \
-    | set -n l [paths]
-  find "$out_base/lib/" -type f -name "*" \
-    | set -n i [paths]
-  i = $regex.filter_out_search($i, '.*static.*')
   find "$out_base/include/" -type f -name "*" \
-    | set -n h [paths]
+    | set -n f [paths]
 
   depdb dyndep \
     --dyn-target \
     --target-cwd "$o" \
-    --target-what 'imported files' \
-    --target-default-type 'h' \
+    --target-what 'headers' \
+    --target-default-type 'hxx' \
     --target-extension-type '=hxx' \
     --target-extension-type 'h=hxx' \
     --target-extension-type 'hpp=hxx' \
-    --target-extension-type 'so=libs' \
-    --target-extension-type 'dylib=libs' \
-    --target-extension-type 'dll=libs' \
-    --target-extension-type 'lib=libi' \
     --format lines \
-    --file $d \
-    -- \
-      echo $regex.merge($l $i $h, '(.+)', '\1\n') >$d
+    -- echo $regex.merge($f, '(.+)', '\1\n')
 
   diag import $>
 
-  for t : $filter_out($>, group)
-    touch $path($t)
-  end
+  for f : $filter($>, hxx)
+  {
+    touch $path($f)
+  }
 }}
 
-## create phony libs{<name>} such that we can export a
-#  deterministic libs{} target, and generate a single
-#  libi{<name>} from all extracted import libraries.
-<libs{$(name).dll} libi{$(name).dll.lib}>:
-{{
-  n    = $name($>[0])
-  libs = ($filter($<, libi))
-
-  $effect($bin.ld.path) -DUMP -NOLOGO -HEADERS $path($libs[0]) \
-   | sed -n -e 's/.*machine \((.*)\)/\1/p' \
-   | set -w m
-  m = ($m[0])
-
-  # extract all import libraries
-  implibs =
-  for l : $libs
-    $effect($bin.ld.path) -DUMP -NOLOGO -HEADERS $path($l) | \
-      sed -n -e 's/idata//p' | \
-      set i [string]
-
-    if (!$empty($i))
-      impllibs += $l
-    end
-  end
-
-  diag $name($bin.ar.path) $impllibs $>
-
-  # create a dummy libs{<name>} as this is only acting as
-  # an 'alias' target, essentially creating a phony lib.
-  touch "$path($>[0])"
-
-  # combine all import libraries to one
-  $effect($bin.ar.path) -NOLOGO "-OUT:$path($>[1])" \
-                        "-NAME:$n" "-MACHINE:$m" $path($impllibs) >! 2>&1
-}}
-
-## symlink exe{<name>} files to the actual executable
-#  such that we can export a deterministic exe{} target
-./: \
-exe{trtexec.exe} \
-: extract{archive}
-{{
-  find "$out_base/bin" -type f -name "*$leaf($path($>))*" \
-    | set e [path]
-
-  diag ln $> -> $e
-
-  # create symlink to actual target
-  test -f "$path($>)" || ln --symbolic "$e" "$path($>)"
-  touch "$path($>)"
-}}
-
-if ($cc.target.system == 'mingw32')
-  cc.loptions += -Wl,--export-all-symbols
-
-# Export options.
-
-lib{$name}:
+./: json{package}
+json = [json_object] $json.load($src_base/package.json)
+for plat: [json_object] ($json["platforms"])
 {
-  cc.type = cc
-  cc.export.poptions = "-I$out_base/include"
-  cc.export.libs = $intf_libs
+  plat_key = $member_name($plat)
+  enabled  = [bool] ($cc.target.cpu-$cc.target.class == $plat_key)
+  for m: [json_object] ($member_value($plat))
+  {
+    n = $member_name($m)
+    v = [json_object] ($member_value($m))
+
+    ./: libs{$n}:
+    {
+      include = $enabled
+      clean   = false
+    }
+    [rule_hint=cxx.link] \
+    libs{$n}: import{$name-headers}: \
+              extract{$name}:
+    {
+      include = $enabled
+      update  = match
+    }
+
+    for b: [json_array] ($v["linked"])
+    {
+      dll  = [path] $out_base/($b["dll"])
+      libi = [paths]
+      for x: [json_array] ($b["libs"])
+        libi += [paths] $out_base/$x
+
+      <libs{$dll} libi{$libi}>: extract{$name}: include = $enabled
+      libs{$n}: libs{$dll}: include = $enabled
+      if $enabled
+      {
+        libs{$n}:
+        {
+          cc.export.libs =+ libs{$dll}
+        }
+      }
+    }
+
+    for s: [json_array] ($v["shared"])
+    {
+      so = [path] $out_base/$s
+      <libs{$so}>: extract{$name}: include = $enabled
+      libs{$n}: libs{$so}: include = $enabled
+      if $enabled
+      {
+        if ($cc.target.class != 'windows')
+        {
+          libs{$n}:
+          {
+            cc.export.libs =+ libs{$so}
+          }
+        }
+      }
+    }
+
+    for a: [json_array] ($v["archives"])
+    {
+      ar = [path] $out_base/$a
+      <liba{$ar}>: extract{$name}: include = $enabled
+      libs{$n}: liba{$ar}: include = $enabled
+      if $enabled
+      {
+        libs{$n}: cc.export.libs += liba{$ar}
+      }
+    }
+
+    for d2: [json_array] ($v["depends"])
+    {
+      dep = [name] $d2
+      libs{$n}: libs{$dep}: include = $enabled
+      if $enabled
+      {
+        libs{$n}: cc.export.libs += libs{$dep}
+      }
+    }
+
+    # Opaque runtime resource files (e.g. TensorRT's builder-resource data
+    # blobs) -- installed verbatim alongside the shared lib, never linked.
+    for r: [json_array] ($v["resources"])
+    {
+      res = [path] $out_base/$r
+      <file{$res}>: extract{$name}: include = $enabled
+      if $enabled
+      {
+        file{$res}: install = $directory([dir_path] $r)/
+      }
+      libs{$n}: file{$res}: include = $enabled
+    }
+
+    libs{$n}: $intf_libs: include = $enabled
+    if $enabled
+    {
+      libs{$n}: cc.export.libs += $intf_libs
+    }
+
+    libs{$n}:
+    {
+      cc.type            = cc
+      cc.export.poptions = $pub_hdrs
+    }
+  }
 }
+
+for plat: [json_object] ($json["exes"])
+{
+  plat_key = $member_name($plat)
+  enabled  = [bool] ($cc.target.cpu-$cc.target.class == $plat_key)
+
+  for m: [json_object] ($member_value($plat))
+  {
+    p = [string] ($member_value($m))
+    if ($cc.target.class == 'windows')
+      p = "$(p).exe"
+
+    ./: exe{$p}: include = $enabled
+    exe{$p}: import{$name-headers}: extract{$name}: include = $enabled
+  }
+}
+
+exe{~'/(.+)/'}:
+{{
+  diag import $> $<
+  touch $path($>)
+}}
 
 lib/liba{**}: install = false
 
-exe{*}:
-{
-  install         = bin/
-  install.subdirs = true
-}
+exe{*}: install = bin/
 
-include/hxx{*}:
+include/hxx{**}:
 {
   install         = include/$project/
   install.subdirs = true

@@ -1,72 +1,38 @@
-define redist: file
-redist{*}: extension = json
-
 define archive: file
 archive{*}: extension = tar
 
 define extract: group
 
-redist{~'/(.+)/'}:
-{{
-  n        = $name($>)
-  manifest = ($<[0])
-  redist   = ($<[1])
+# build2 already knows about libi on Windows.
+if ($cc.target.class != 'windows')
+{
+  define libi: file
+}
 
-  # 'b dist' may cap width, so join escaped lines.
-  cat $path($manifest) \
-    | set m [strings]
-  m = $regex.apply($m, '\\\n', '')
-
-  echo $m \
-    | sed -n -e 's/^url:\s*(.*)$/\1/p' \
-    | set url [string]
-
-  cat $path($manifest) \
-    | sed -n -e 's/^version:\s*([0-9.]+).*$/\1/p' \
-    | set local [string]
-
-  json         = [json] $json.load($path($redist))
-  json         = [json] ($json["$n"])
-
-  depdb hash $json
-  diag redist $redist $>
-
-  pkg          = [json] ($json["$cc.target.class-$cc.target.cpu"])
-  pkg_version  = [string] ($json["version"])
-  archive      = [path] "$directory($url)/([string] $pkg["relative_path"])"
-
-  if (!$contains($pkg_version, $local))
-    echo "$n mismatch: v$local \(local) != v$pkg_version \(remote)"
-    exit 1
-  end
-
-  if ($null(($json["base_url"])))
-    json += ("base_url"@"$directory($url)")
-  end
-  echo "$json.serialize($json)" >$path($>)
-}}
-
+# Download platform-specific archive directly from a URL built from the
+# committed manifest.json (no live/remote redistrib index exists for
+# TensorRT to fetch-and-version-check against, unlike CUDA).
+# $<[0]: manifest.json (local config)
 archive{~'/(.+)/'}:
 {{
   tar  = $out_root/$leaf($path($>))
   part = $(tar).part
 
-  # extract details from redist.json
-  json     = ($<[0])
-  meta     = [json] $json.load($path($json))
-  pkg      = [json] ($meta["$cc.target.class-$cc.target.cpu"])
-  base_url = [string] ($meta["base_url"])
-  url      = [path] "$base_url/([string] $pkg["relative_path"])"
+  local_j   = ($<[0])
+  local_cfg = [json] $json.load($path($local_j))
 
-  depdb hash $json
+  platforms = [json_object] ($local_cfg["platforms"])
+  plat_cfg  = [json] ($platforms["$cc.target.cpu-$cc.target.class"])
+  rel_path  = [string] ($plat_cfg["relativePath"])
+  base_url  = [string] ($local_cfg["baseUrl"])
+
+  url = "$(base_url)/$(rel_path)"
+
+  depdb hash $local_cfg
   diag curl $url -> $>
 
-  # curl --netrc -c $c "https://developer.nvidia.com/login" <| &$c
-  # curl -b $c -O "$url" <|
-
-  # download if missing or broken
   bsdtar -tf $tar >- 2>&1 || \
-    curl -\# --netrc --fail --output $part "$url"
+    curl -\# --fail --output $part "$url"
   test -f $part && \
     rm -f $tar && mv $part $tar &!$tar || true
   test -f $path($>) || \
@@ -74,26 +40,24 @@ archive{~'/(.+)/'}:
   touch $path($>)
 }}
 
-## Use a fixed name for group to circumvent #463
-#  https://github.com/build2/build2/issues/463
-extract{archive}:
+# Extract archive into $out_base (strip the archive root directory).
+extract{~'/(.+)/'}:
 {{
+  n = $name($>[0])
   o = $posix_representation($directory($>[0]))
   a = $posix_representation($path($<[0]))
-  d = "$(a).files"
+  d = "$o$(n).files"
 
   pattern = [cmdline] \
     --exclude "*/bin/*32_*" \
-    --exclude "*/data/*" \
     --exclude "*/lib/*32_*" \
     --exclude "*/lib32/*" \
-    --exclude "*/python/*" \
-    --exclude "*_lean_*" \
     --exclude "*_static*" \
-    --exclude "*samples*" \
+    --exclude "*/python/*" \
+    --exclude "*/targets/*" \
+    --exclude "*/doc/*" \
     "*/*/*"
 
-  # extract paths for all relevant files
   depdb dyndep \
     --dyn-target \
     --target-cwd "$o" \
@@ -102,8 +66,6 @@ extract{archive}:
     --target-extension-type '=file' \
     --target-extension-type 'h=file' \
     --target-extension-type 'hpp=file' \
-    --target-extension-type 'cuh=file' \
-    --target-extension-type 'inl=file' \
     --target-extension-type 'a=file' \
     --target-extension-type 'so=file' \
     --target-extension-type 'dylib=file' \
@@ -113,14 +75,52 @@ extract{archive}:
     --format lines \
     --file "$d" \
     -- \
-      bsdtar --fast-read -tf "$a" $pattern \
-      | sed -n -e 's%^.*?/%%p' \
-      | sed -n -e 's%^(.*)/?$%\1%p' \
-      | sed -e "s%.+/\$%$d%g" >$d
+      bsdtar -tf "$a" $pattern \
+      | sed -n -e 's%^[^/]*/%%p' \
+      | grep -v '/$' >$d
 
-  # extract all files
   diag bsdtar $< $filter_out($>, group)
-
   bsdtar -C "$o" -xmf "$a" --strip-components=1 $pattern
   touch $d
 }}
+
+# Linux: install versioned SONAME companions alongside the base .so.
+# build2's default install only copies the base file. This also copies any
+# real versioned binaries (e.g. libnvinfer.so.10.14.1) and recreates versioned
+# symlinks (e.g. libnvinfer.so.10) pointing at the installed binary.
+#
+if ($cc.target.class != 'windows')
+{
+  libs{~'/lib(.+)/'}:
+  % install
+  {{
+    dst = $install.resolve($install.lib, [dir_path])
+
+    diag install $>
+
+    mkdir --no-cleanup -p "$dst"
+
+    for src : [paths] $path($>)
+    {
+      find "$directory($src)" -maxdepth 1 -name "$leaf($src).*" -type f \
+        | set real_files [paths]
+      find "$directory($src)" -maxdepth 1 -name "$leaf($src).*" -type l \
+        | set sym_files [paths]
+
+      if (!$empty($real_files))
+      {
+        real = $front($real_files)
+        cp --no-cleanup "$real" "$dst/"
+        rm -f "$dst/$leaf($src)"
+        ln --no-cleanup -s "$leaf($real)" "$dst/$leaf($src)"
+        for s : $sym_files
+        {
+          rm -f "$dst/$leaf($s)"
+          ln --no-cleanup -s "$leaf($real)" "$dst/$leaf($s)"
+        }
+      }
+      else
+        cp --no-cleanup "$src" "$dst/"
+    }
+  }}
+}

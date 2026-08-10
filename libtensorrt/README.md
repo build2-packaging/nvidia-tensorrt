@@ -6,8 +6,8 @@ in order to "build" the exported target(s) it downloads (potentially large)
 pre-built binaries provided by NVIDIA for the target platform.
 >
 > CI for this package is disabled due to the above.  
-Supported platforms/compilers are Windows/MSVC. Linux binaries exist but are
-currently not available through this package.
+Supported platforms/compilers are Windows/MSVC and Linux/GCC or Clang
+(x86_64).
 
 NVIDIA® TensorRT™ is a C++ library that facilitates high-performance inference
 on NVIDIA GPUs. TensorRT takes a trained network, which consists of a network
@@ -29,13 +29,13 @@ To start using `libtensorrt` in your project, add the following `depends`
 value to your `manifest`, adjusting the version constraint as appropriate:
 
 ```
-depends: libtensorrt ^10.8.0
+depends: libtensorrt ^10.14.1
 ```
 
 Then import the library in your `buildfile`:
 
 ```
-import libs = libtensorrt%libs{tensorrt}
+import libs = libtensorrt%libs{nvinfer}
 ```
 
 
@@ -44,5 +44,13 @@ import libs = libtensorrt%libs{tensorrt}
 This package provides the following importable targets:
 
 ```
-libs{tensorrt}
+libs{nvinfer}
+libs{nvinfer_plugin}
+libs{nvinfer_lean}
+libs{nvinfer_dispatch}
+libs{nvinfer_vc_plugin}
+libs{nvonnxparser}
+libs{tensorrt_shim}
 ```
+
+`libs{tensorrt_shim}` is only available on Linux.

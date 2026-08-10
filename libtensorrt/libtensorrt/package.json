@@ -1,0 +1,185 @@
+{
+  "platforms": {
+    "x86_64-windows": {
+      "nvinfer": {
+        "linked": [
+          {
+            "dll": "bin/nvinfer_10.dll",
+            "libs": [
+              "lib/nvinfer_10.lib"
+            ]
+          }
+        ],
+        "shared": [],
+        "archives": [],
+        "depends": [],
+        "resources": [
+          "bin/nvinfer_builder_resource_ptx_10.dll",
+          "bin/nvinfer_builder_resource_sm75_10.dll",
+          "bin/nvinfer_builder_resource_sm80_10.dll",
+          "bin/nvinfer_builder_resource_sm86_10.dll",
+          "bin/nvinfer_builder_resource_sm89_10.dll",
+          "bin/nvinfer_builder_resource_sm90_10.dll",
+          "bin/nvinfer_builder_resource_sm120_10.dll"
+        ]
+      },
+      "nvinfer_plugin": {
+        "linked": [
+          {
+            "dll": "bin/nvinfer_plugin_10.dll",
+            "libs": [
+              "lib/nvinfer_plugin_10.lib"
+            ]
+          }
+        ],
+        "shared": [],
+        "archives": [],
+        "depends": [
+          "nvinfer"
+        ],
+        "resources": []
+      },
+      "nvinfer_lean": {
+        "linked": [
+          {
+            "dll": "bin/nvinfer_lean_10.dll",
+            "libs": [
+              "lib/nvinfer_lean_10.lib"
+            ]
+          }
+        ],
+        "shared": [],
+        "archives": [],
+        "depends": [],
+        "resources": []
+      },
+      "nvinfer_dispatch": {
+        "linked": [
+          {
+            "dll": "bin/nvinfer_dispatch_10.dll",
+            "libs": [
+              "lib/nvinfer_dispatch_10.lib"
+            ]
+          }
+        ],
+        "shared": [],
+        "archives": [],
+        "depends": [],
+        "resources": []
+      },
+      "nvinfer_vc_plugin": {
+        "linked": [
+          {
+            "dll": "bin/nvinfer_vc_plugin_10.dll",
+            "libs": [
+              "lib/nvinfer_vc_plugin_10.lib"
+            ]
+          }
+        ],
+        "shared": [],
+        "archives": [],
+        "depends": [],
+        "resources": []
+      },
+      "nvonnxparser": {
+        "linked": [
+          {
+            "dll": "bin/nvonnxparser_10.dll",
+            "libs": [
+              "lib/nvonnxparser_10.lib"
+            ]
+          }
+        ],
+        "shared": [],
+        "archives": [],
+        "depends": [],
+        "resources": []
+      }
+    },
+    "x86_64-linux": {
+      "nvinfer": {
+        "linked": [],
+        "shared": [
+          "lib/libnvinfer.so"
+        ],
+        "archives": [],
+        "depends": [],
+        "resources": [
+          "lib/libnvinfer_builder_resource_ptx.so.10.14.1",
+          "lib/libnvinfer_builder_resource_sm75.so.10.14.1",
+          "lib/libnvinfer_builder_resource_sm80.so.10.14.1",
+          "lib/libnvinfer_builder_resource_sm86.so.10.14.1",
+          "lib/libnvinfer_builder_resource_sm89.so.10.14.1",
+          "lib/libnvinfer_builder_resource_sm90.so.10.14.1",
+          "lib/libnvinfer_builder_resource_sm100.so.10.14.1",
+          "lib/libnvinfer_builder_resource_sm120.so.10.14.1"
+        ]
+      },
+      "nvinfer_plugin": {
+        "linked": [],
+        "shared": [
+          "lib/libnvinfer_plugin.so"
+        ],
+        "archives": [],
+        "depends": [
+          "nvinfer"
+        ],
+        "resources": []
+      },
+      "nvinfer_lean": {
+        "linked": [],
+        "shared": [
+          "lib/libnvinfer_lean.so"
+        ],
+        "archives": [],
+        "depends": [],
+        "resources": []
+      },
+      "nvinfer_dispatch": {
+        "linked": [],
+        "shared": [
+          "lib/libnvinfer_dispatch.so"
+        ],
+        "archives": [],
+        "depends": [],
+        "resources": []
+      },
+      "nvinfer_vc_plugin": {
+        "linked": [],
+        "shared": [
+          "lib/libnvinfer_vc_plugin.so"
+        ],
+        "archives": [],
+        "depends": [],
+        "resources": []
+      },
+      "nvonnxparser": {
+        "linked": [],
+        "shared": [
+          "lib/libnvonnxparser.so"
+        ],
+        "archives": [],
+        "depends": [],
+        "resources": []
+      },
+      "tensorrt_shim": {
+        "linked": [],
+        "shared": [
+          "lib/libtensorrt_shim.so"
+        ],
+        "archives": [],
+        "depends": [],
+        "resources": []
+      }
+    }
+  },
+  "exes": {
+    "x86_64-windows": {
+      "trtexec": "bin/trtexec"
+    },
+    "x86_64-linux": {
+      "trtexec": "bin/trtexec",
+      "tensorrt_player": "bin/tensorrt_player"
+    }
+  }
+}

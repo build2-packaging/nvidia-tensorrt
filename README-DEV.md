@@ -8,8 +8,10 @@ upgrading to a new upstream version.
 1. Go to [NVIDIA's download page](https://developer.nvidia.com/tensorrt/download).  
    _Note: This requires logging in with (free) developer account._
 2. Navigate to the URL list with the version you'd like to package.
-3. For each platform (eg. Windows & Linux, x86_64 & ARM), copy the  
-   download URL and update the corresponding entry in [redistrib.json](./libtensorrt/libtensorrt/redistrib.json).  
+3. For each platform (eg. `x86_64-windows`, `x86_64-linux`, `aarch64-linux`),
+   copy the download URL's path (relative to `baseUrl`) and update the
+   corresponding platform's `relativePath`/`version` entry in
+   [manifest.json](./libtensorrt/libtensorrt/manifest.json).  
    _Note: Pick the ones built for the latest CUDA version_.
 4. Update `version` & `upstream-version` in [`manifest`](./libtensorrt/manifest).  
    _Note: `upstream-version` is the one embedded in the URL._
