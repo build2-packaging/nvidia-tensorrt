@@ -1,7 +1,9 @@
-import nvinfer      = libtensorrt%libs{nvinfer}
-import nvonnxparser = libtensorrt%libs{nvonnxparser}
+import libs    = libtensorrt%libs{nvinfer} \
+                 libtensorrt%libs{nvonnxparser}
 # make sure executables are importable
-import! all = \
-  libtensorrt%exe{trtexec}
+import trtexec = libtensorrt%exe{trtexec}
 
-exe{driver}: cxx{**} $nvinfer $nvonnxparser testscript{**} $all
+testscript{trtexec}@./: test = $trtexec
+./: testscript{trtexec}@./ $trtexec
+
+./: exe{driver}: cxx{**} $libs
