@@ -59,7 +59,9 @@ for plat: [json_object] ($json["platforms"])
 {
   plat_key = $member_name($plat)
   enabled  = [bool] ($cc.target.cpu-$cc.target.class == $plat_key)
-  for m: [json_object] ($member_value($plat))
+  plat_val = [json_object] $member_value($plat)
+
+  for m: [json_object] ($plat_val["libs"])
   {
     n = $member_name($m)
     v = [json_object] ($member_value($m))
@@ -158,19 +160,10 @@ for plat: [json_object] ($json["platforms"])
       cc.export.poptions = $pub_hdrs
     }
   }
-}
 
-for plat: [json_object] ($json["exes"])
-{
-  plat_key = $member_name($plat)
-  enabled  = [bool] ($cc.target.cpu-$cc.target.class == $plat_key)
-
-  for m: [json_object] ($member_value($plat))
+  for m: [json_object] ($plat_val["exes"])
   {
     p = [string] ($member_value($m))
-    if ($cc.target.class == 'windows')
-      p = "$(p).exe"
-
     ./: exe{$p}: include = $enabled
     exe{$p}: import{$name-headers}: extract{$name}: include = $enabled
   }
