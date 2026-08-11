@@ -165,7 +165,7 @@ for plat: [json_object] ($json["platforms"])
   {
     p = [string] ($member_value($m))
     ./: exe{$p}: include = $enabled
-    exe{$p}: import{$name-headers}: extract{$name}: include = $enabled
+    exe{$(p)...}: import{$name-headers}: extract{$name}: include = $enabled
   }
 }
 

@@ -6,3 +6,11 @@ using cxx
 
 hxx{*}: extension = h
 cxx{*}: extension = cpp
+
+# package.json intentionally exclude '.exe' extension
+# for executables on Windows as to not confuse build2
+# when the "real" exe targets share path with only
+# the extension differing.
+#
+if ($cc.target.class == 'windows')
+  exe{*}: extension = exe
