@@ -163,9 +163,21 @@ for plat: [json_object] ($json["platforms"])
 
   for m: [json_object] ($plat_val["exes"])
   {
-    p = [string] ($member_value($m))
+    v = [json_object] ($member_value($m))
+    p = [string] ($v["path"])
+
     ./: exe{$p}: include = $enabled
     exe{$(p)...}: import{$name-headers}: extract{$name}: include = $enabled
+
+    for d2: [json_array] ($v["depends"])
+    {
+      dep = [name] $d2
+      exe{$(p)...}: libs{$dep}:
+      {
+        include = $enabled
+        clean = false
+      }
+    }
   }
 }
 
@@ -173,6 +185,19 @@ exe{~'/(.+)/'}:
 {{
   diag import $> $<
   touch $path($>)
+
+  # NVIDIA ships these pre-built with no RPATH/RUNPATH at all, relying on
+  # the caller to set LD_LIBRARY_PATH, confirmed by running the pristine,
+  # unmodified archive contents directly. Set a relocatable rpath, using
+  # $ORIGIN rather than an absolute path, so the exe stays relocatable and
+  # finds its sibling shared libs without any env setup, whether run from
+  # the build tree or an install tree (bin/ and lib/ are always siblings in
+  # both).
+  if ($cc.target.class == 'linux')
+  {
+    echo patchelf $relative($path($>), $src_root)
+    patchelf --set-rpath '$ORIGIN/../lib' $path($>)
+  }
 }}
 
 lib/liba{**}: install = false

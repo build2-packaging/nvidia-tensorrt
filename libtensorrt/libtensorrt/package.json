@@ -98,7 +98,10 @@
         }
       },
       "exes": {
-        "trtexec": "bin/trtexec"
+        "trtexec": {
+          "path": "bin/trtexec",
+          "depends": ["nvonnxparser"]
+        }
       }
     },
     "x86_64-linux": {
@@ -179,8 +182,14 @@
         }
       },
       "exes": {
-        "trtexec":         "bin/trtexec",
-        "tensorrt_player": "bin/tensorrt_player"
+        "trtexec": {
+          "path": "bin/trtexec",
+          "depends": ["nvonnxparser"]
+        },
+        "tensorrt_player": {
+          "path": "bin/tensorrt_player",
+          "depends": ["nvinfer"]
+        }
       }
     }
   }

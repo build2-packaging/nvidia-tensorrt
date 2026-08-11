@@ -7,3 +7,6 @@ testscript{trtexec}@./: test = $trtexec
 ./: testscript{trtexec}@./ $trtexec
 
 ./: exe{driver}: cxx{**} $libs
+
+if ($cxx.target.system != 'win32-msvc')
+  cxx.coptions += -Wno-deprecated-declarations
