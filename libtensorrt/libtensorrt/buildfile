@@ -166,8 +166,13 @@ for plat: [json_object] ($json["platforms"])
     v = [json_object] ($member_value($m))
     p = [string] ($v["path"])
 
-    ./: exe{$p}: include = $enabled
+    ./: exe{$(p)...}: include = $enabled
     exe{$(p)...}: import{$name-headers}: extract{$name}: include = $enabled
+
+    exe{$(p)...}:
+    {
+      install.subdirs = true
+    }
 
     for d2: [json_array] ($v["depends"])
     {

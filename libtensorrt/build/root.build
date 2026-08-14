@@ -7,10 +7,12 @@ using cxx
 hxx{*}: extension = h
 cxx{*}: extension = cpp
 
-# package.json intentionally exclude '.exe' extension
-# for executables on Windows as to not confuse build2
-# when the "real" exe targets share path with only
-# the extension differing.
+legal{*}: backlink = false
+
+# Since the executables are prebuilt, the normally run link-rule never
+# assigns it explicitly. Let's be explicit here and in package.json.
 #
 if ($cc.target.class == 'windows')
   exe{*}: extension = exe
+
+test.target = $cxx.target

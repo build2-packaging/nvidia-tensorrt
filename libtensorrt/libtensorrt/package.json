@@ -99,7 +99,7 @@
       },
       "exes": {
         "trtexec": {
-          "path": "bin/trtexec",
+          "path": "bin/trtexec.exe",
           "depends": ["nvonnxparser"]
         }
       }

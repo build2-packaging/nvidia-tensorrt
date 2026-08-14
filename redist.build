@@ -40,6 +40,9 @@ archive{~'/(.+)/'}:
   touch $path($>)
 }}
 
+# Per-package extra exclusions for extraction (override after sourcing this file).
+extract_exclude = [cmdline]
+
 # Extract archive into $out_base (strip the archive root directory).
 extract{~'/(.+)/'}:
 {{
@@ -56,6 +59,7 @@ extract{~'/(.+)/'}:
     --exclude "*/python/*" \
     --exclude "*/targets/*" \
     --exclude "*/doc/*" \
+    $extract_exclude \
     "*/*/*"
 
   depdb dyndep \

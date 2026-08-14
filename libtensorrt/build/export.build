@@ -3,7 +3,7 @@ $out_root/
   include libtensorrt/
 }
 
-if ($target_type($import.target) == 'exe')
+if ($target_type($import.target) == exe)
   export $out_root/libtensorrt/bin/$import.target
 else
   export $out_root/libtensorrt/$import.target
