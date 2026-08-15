@@ -90,7 +90,7 @@ extract{~'/(.+)/'}:
 
 # Linux: install versioned SONAME companions alongside the base .so.
 # build2's default install only copies the base file. This also copies any
-# real versioned binaries (e.g. libnvinfer.so.10.14.1) and recreates versioned
+# real versioned binaries (e.g. libnvinfer.so.10.16.1) and recreates versioned
 # symlinks (e.g. libnvinfer.so.10) pointing at the installed binary.
 #
 if ($cc.target.class != 'windows')

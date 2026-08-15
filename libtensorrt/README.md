@@ -29,7 +29,7 @@ To start using `libtensorrt` in your project, add the following `depends`
 value to your `manifest`, adjusting the version constraint as appropriate:
 
 ```
-depends: libtensorrt ^10.14.1
+depends: libtensorrt ^10.16.1
 ```
 
 Then import the library in your `buildfile`:

@@ -114,14 +114,14 @@
           "archives": [],
           "depends": [],
           "resources": [
-            "lib/libnvinfer_builder_resource_ptx.so.10.14.1",
-            "lib/libnvinfer_builder_resource_sm75.so.10.14.1",
-            "lib/libnvinfer_builder_resource_sm80.so.10.14.1",
-            "lib/libnvinfer_builder_resource_sm86.so.10.14.1",
-            "lib/libnvinfer_builder_resource_sm89.so.10.14.1",
-            "lib/libnvinfer_builder_resource_sm90.so.10.14.1",
-            "lib/libnvinfer_builder_resource_sm100.so.10.14.1",
-            "lib/libnvinfer_builder_resource_sm120.so.10.14.1"
+            "lib/libnvinfer_builder_resource_ptx.so.10.16.1",
+            "lib/libnvinfer_builder_resource_sm75.so.10.16.1",
+            "lib/libnvinfer_builder_resource_sm80.so.10.16.1",
+            "lib/libnvinfer_builder_resource_sm86.so.10.16.1",
+            "lib/libnvinfer_builder_resource_sm89.so.10.16.1",
+            "lib/libnvinfer_builder_resource_sm90.so.10.16.1",
+            "lib/libnvinfer_builder_resource_sm100.so.10.16.1",
+            "lib/libnvinfer_builder_resource_sm120.so.10.16.1"
           ]
         },
         "nvinfer_plugin": {
