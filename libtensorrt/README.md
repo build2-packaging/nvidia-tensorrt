@@ -44,13 +44,13 @@ import libs = libtensorrt%libs{nvinfer}
 This package provides the following importable targets:
 
 ```
-libs{nvinfer}
-libs{nvinfer_plugin}
-libs{nvinfer_lean}
-libs{nvinfer_dispatch}
-libs{nvinfer_vc_plugin}
-libs{nvonnxparser}
-libs{tensorrt_shim}
+libs{nvinfer}            # core builder and runtime (main TensorRT API)
+libs{nvinfer_plugin}     # standard built-in op plugins (batch norm, RNN cells, etc.)
+libs{nvinfer_lean}       # runtime-only nvinfer without the builder, smaller footprint
+libs{nvinfer_dispatch}   # forward-compatible dispatch shim, delegates to the installed lean runtime
+libs{nvinfer_vc_plugin}  # version-compatible plugin library, pairs with nvinfer_dispatch
+libs{nvonnxparser}       # ONNX parser, converts .onnx graphs into TensorRT networks
+libs{tensorrt_shim}      # plugin loader shim for version-compatible deployments
 ```
 
 `libs{tensorrt_shim}` is only available on Linux.
