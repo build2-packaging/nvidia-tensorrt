@@ -1,7 +1,7 @@
 : 1
 name: libtensorrt
 version: 10.16.1-a.0.z
-upstream-version: 10.14.1.48
+upstream-version: 10.16.1.11
 type: lib,binless
 language: c++
 project: nvidia-tensorrt
