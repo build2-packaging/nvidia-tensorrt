@@ -31,5 +31,10 @@ int main() {
   patch = version % 100;
   printf("getNvOnnxParserVersion(): %d.%d.%d (%d)\n", major, minor, patch,
          version);
+
+  int count = 0;
+  cudaError_t err = cudaGetDeviceCount(&count);
+  printf("cudaGetDeviceCount: %s (%d devices)\n", cudaGetErrorString(err), count);
+
   return 0;
 }
