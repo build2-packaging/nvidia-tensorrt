@@ -15,4 +15,7 @@ legal{*}: backlink = false
 if ($cc.target.class == 'windows')
   exe{*}: extension = exe
 
+config [dir_path] config.libtensorrt.cache ?= \
+  (!$null($config.tensorrt.cache) ? $config.tensorrt.cache : $out_root)
+
 test.target = $cxx.target

@@ -54,3 +54,16 @@ libs{tensorrt_shim}      # plugin loader shim for version-compatible deployments
 ```
 
 `libs{tensorrt_shim}` is only available on Linux.
+
+
+## Configuration variables
+
+This package provides the following configuration variables:
+
+```
+[dir_path] config.libtensorrt.cache ?= $out_root
+```
+
+The directory used to cache downloaded binary archives between builds. If
+`config.tensorrt.cache` is set (a shared project-wide cache directory), it
+takes precedence over the per-package default of `$out_root`.
