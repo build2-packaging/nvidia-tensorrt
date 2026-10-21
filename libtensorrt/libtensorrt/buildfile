@@ -177,10 +177,13 @@ for plat: [json_object] ($json["platforms"])
     for d2: [json_array] ($v["depends"])
     {
       dep = [name] $d2
+      # install=false works around a build2 access violation installing an
+      # exe{} with an ad hoc libs{} prerequisite (0.18.1, 0.19.0-a.0).
       exe{$(p)...}: libs{$dep}:
       {
         include = $enabled
         clean = false
+        install = false
       }
     }
   }
