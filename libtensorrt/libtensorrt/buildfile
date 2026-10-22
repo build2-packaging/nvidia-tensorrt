@@ -214,6 +214,6 @@ exe{*}: install = bin/
 
 include/hxx{**}:
 {
-  install         = include/$project/
+  install         = include/
   install.subdirs = true
 }
