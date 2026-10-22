@@ -46,6 +46,10 @@ archive{~'/(.+)/'}:
 # Per-package extra exclusions for extraction (override after sourcing this file).
 extract_exclude = [cmdline]
 
+# Linux rpath for extracted executables, empty to leave them alone (override
+# after sourcing this file).
+extract_bin_rpath = [string] ''
+
 # Extract archive into $out_base (strip the archive root directory).
 extract{~'/(.+)/'}:
 {{
@@ -87,6 +91,30 @@ extract{~'/(.+)/'}:
 
   diag bsdtar $< $filter_out($>, group)
   bsdtar -C "$o" -xmf "$a" --strip-components=1 $pattern
+
+  # The extracted libraries dlopen siblings by bare name.
+  if ($cc.target.class == 'linux')
+  {
+    find "$o" -type f -name "*.so*" | set -n sos [paths]
+
+    for s: $sos
+    {
+      if $regex.match($leaf($s), '.+\.so(\.[0-9]+)*')
+        patchelf --set-rpath '$ORIGIN' $s
+    }
+
+    if ($extract_bin_rpath != '')
+    {
+      find "$o" -type f | set -n bins [paths]
+
+      for b: $bins
+      {
+        if ($leaf($directory($b)) == 'bin')
+          patchelf --set-rpath "$extract_bin_rpath" $b
+      }
+    }
+  }
+
   touch $d
 }}
 
@@ -108,9 +136,9 @@ if ($cc.target.class != 'windows')
 
     for src : [paths] $path($>)
     {
-      find "$directory($src)" -maxdepth 1 -name "$leaf($src).*" -type f \
+      find "$directory($src)" -maxdepth 1 -name "$leaf($src).[0-9]*" -type f \
         | set real_files [paths]
-      find "$directory($src)" -maxdepth 1 -name "$leaf($src).*" -type l \
+      find "$directory($src)" -maxdepth 1 -name "$leaf($src).[0-9]*" -type l \
         | set sym_files [paths]
 
       if (!$empty($real_files))
