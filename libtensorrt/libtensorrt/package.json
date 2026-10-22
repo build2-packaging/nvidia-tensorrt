@@ -14,13 +14,14 @@
           "shared": [],
           "archives": [],
           "depends": [],
-          "resources": [
+          "runtime": [
             "bin/nvinfer_builder_resource_ptx_10.dll",
             "bin/nvinfer_builder_resource_sm75_10.dll",
             "bin/nvinfer_builder_resource_sm80_10.dll",
             "bin/nvinfer_builder_resource_sm86_10.dll",
             "bin/nvinfer_builder_resource_sm89_10.dll",
             "bin/nvinfer_builder_resource_sm90_10.dll",
+            "bin/nvinfer_builder_resource_sm100_10.dll",
             "bin/nvinfer_builder_resource_sm120_10.dll"
           ]
         },
@@ -38,7 +39,7 @@
           "depends": [
             "nvinfer"
           ],
-          "resources": []
+          "runtime": []
         },
         "nvinfer_lean": {
           "linked": [
@@ -52,7 +53,7 @@
           "shared": [],
           "archives": [],
           "depends": [],
-          "resources": []
+          "runtime": []
         },
         "nvinfer_dispatch": {
           "linked": [
@@ -66,7 +67,7 @@
           "shared": [],
           "archives": [],
           "depends": [],
-          "resources": []
+          "runtime": []
         },
         "nvinfer_vc_plugin": {
           "linked": [
@@ -80,7 +81,7 @@
           "shared": [],
           "archives": [],
           "depends": [],
-          "resources": []
+          "runtime": []
         },
         "nvonnxparser": {
           "linked": [
@@ -94,13 +95,15 @@
           "shared": [],
           "archives": [],
           "depends": [],
-          "resources": []
+          "runtime": []
         }
       },
       "exes": {
         "trtexec": {
           "path": "bin/trtexec.exe",
-          "depends": ["nvonnxparser"]
+          "depends": [
+            "nvonnxparser"
+          ]
         }
       }
     },
@@ -113,7 +116,7 @@
           ],
           "archives": [],
           "depends": [],
-          "resources": [
+          "runtime": [
             "lib/libnvinfer_builder_resource_ptx.so.10.16.1",
             "lib/libnvinfer_builder_resource_sm75.so.10.16.1",
             "lib/libnvinfer_builder_resource_sm80.so.10.16.1",
@@ -133,7 +136,7 @@
           "depends": [
             "nvinfer"
           ],
-          "resources": []
+          "runtime": []
         },
         "nvinfer_lean": {
           "linked": [],
@@ -142,7 +145,7 @@
           ],
           "archives": [],
           "depends": [],
-          "resources": []
+          "runtime": []
         },
         "nvinfer_dispatch": {
           "linked": [],
@@ -151,7 +154,7 @@
           ],
           "archives": [],
           "depends": [],
-          "resources": []
+          "runtime": []
         },
         "nvinfer_vc_plugin": {
           "linked": [],
@@ -160,7 +163,7 @@
           ],
           "archives": [],
           "depends": [],
-          "resources": []
+          "runtime": []
         },
         "nvonnxparser": {
           "linked": [],
@@ -169,7 +172,7 @@
           ],
           "archives": [],
           "depends": [],
-          "resources": []
+          "runtime": []
         },
         "tensorrt_shim": {
           "linked": [],
@@ -178,17 +181,21 @@
           ],
           "archives": [],
           "depends": [],
-          "resources": []
+          "runtime": []
         }
       },
       "exes": {
         "trtexec": {
           "path": "bin/trtexec",
-          "depends": ["nvonnxparser"]
+          "depends": [
+            "nvonnxparser"
+          ]
         },
         "tensorrt_player": {
           "path": "bin/tensorrt_player",
-          "depends": ["nvinfer"]
+          "depends": [
+            "nvinfer"
+          ]
         }
       }
     }

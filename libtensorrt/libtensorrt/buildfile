@@ -130,6 +130,14 @@ for plat: [json_object] ($json["platforms"])
       }
     }
 
+    # Shared libraries loaded at run time and never linked.
+    for r: [json_array] ($v["runtime"])
+    {
+      so = [path] $out_base/$r
+      <libs{$so}>: extract{$name}: include = $enabled
+      libs{$n}: libs{$so}: include = $enabled
+    }
+
     for a: [json_array] ($v["archives"])
     {
       ar = [path] $out_base/$a
