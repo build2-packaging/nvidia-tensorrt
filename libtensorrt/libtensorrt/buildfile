@@ -212,6 +212,12 @@ lib/liba{**}: install = false
 
 exe{*}: install = bin/
 
+include/h{**}:
+{
+  install         = include/
+  install.subdirs = true
+}
+
 include/hxx{**}:
 {
   install         = include/
