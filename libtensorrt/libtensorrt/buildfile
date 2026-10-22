@@ -151,8 +151,7 @@ for plat: [json_object] ($json["platforms"])
       }
     }
 
-    # Opaque runtime resource files (e.g. TensorRT's builder-resource data
-    # blobs) -- installed verbatim alongside the shared lib, never linked.
+    # Opaque resource files installed verbatim where upstream expects them.
     for r: [json_array] ($v["resources"])
     {
       res = [path] $out_base/$r
