@@ -10,10 +10,26 @@ manifest_json = [json_object] $json.load($src_base/manifest.json)
 package_ver   = "$(version.major).$(version.minor).$(version.patch)"
 
 pub_hdrs = [strings]
+pub_incs = [dir_paths]
+inc_root = [dir_path]
 for d: [json_array] ($manifest_json["includeDirs"])
 {
   dir = [string] $d
   pub_hdrs += "-I$out_base/$dir"
+
+  # The first entry is the install root and becomes include/, the rest are
+  # relative to it.
+  #
+  if ($empty($inc_root))
+  {
+    inc_root = [dir_path] $dir
+    pub_incs += include/
+  }
+  else
+  {
+    rel = [string] $leaf([dir_path] $dir, $inc_root)
+    pub_incs += "include/$rel"
+  }
 }
 
 for plat: [json_object] ($manifest_json["platforms"])
@@ -159,6 +175,7 @@ for plat: [json_object] ($json["platforms"])
       cc.type            = cc
       cc.export.poptions = $pub_hdrs
     }
+    libs{$n}: cc.pkgconfig.include = $pub_incs
   }
 
   for m: [json_object] ($plat_val["exes"])
