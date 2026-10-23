@@ -50,7 +50,7 @@ libs{nvinfer_lean}       # runtime-only nvinfer without the builder, smaller foo
 libs{nvinfer_dispatch}   # forward-compatible dispatch shim, delegates to the installed lean runtime
 libs{nvinfer_vc_plugin}  # version-compatible plugin library, pairs with nvinfer_dispatch
 libs{nvonnxparser}       # ONNX parser, converts .onnx graphs into TensorRT networks
-libs{tensorrt_shim}      # plugin loader shim for version-compatible deployments
+libs{tensorrt_shim}      # capture shim, records engine-build API calls for replay
 ```
 
 `libs{tensorrt_shim}` is only available on Linux.
