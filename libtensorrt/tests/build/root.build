@@ -1,8 +1,5 @@
 using cxx
 
-# Assume headers are importable unless stated otherwise.
-#
-
 # Every exe{} in this subproject is by default a test.
 #
 exe{*}: test = true
