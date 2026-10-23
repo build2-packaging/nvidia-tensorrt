@@ -1,4 +1,4 @@
-# libtensort - A C++ library
+# libtensorrt - A C++ library
 
 > **NOTE:**  
 This package is not open source and does not contain any source code. Instead,
