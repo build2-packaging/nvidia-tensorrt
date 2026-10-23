@@ -55,6 +55,15 @@ libs{tensorrt_shim}      # plugin loader shim for version-compatible deployments
 
 `libs{tensorrt_shim}` is only available on Linux.
 
+It also provides the following importable executables:
+
+```
+exe{trtexec}          # command line engine builder and inference benchmark
+exe{tensorrt_player}  # rebuilds an engine from captured TensorRT API calls
+```
+
+`exe{tensorrt_player}` is only available on Linux.
+
 
 ## Configuration variables
 
