@@ -1,0 +1,202 @@
+#! /usr/bin/env bx
+
+# Install this repository and nvidia-cuda-toolkit into one prefix, then build
+# and run a consumer against the installed libraries. Run before publishing,
+# on every target platform, with test-dist.bx.
+#
+# The two repositories are only usable together: the generated pc files for
+# the TensorRT libraries reference cudart, so a prefix holding one and not the
+# other proves nothing. Neither package's own tests reach that.
+#
+# What this checks, and nothing more:
+#
+#   - every library named in package.json imports from the installed prefix
+#   - trtexec installs under its platform name and only that name
+#   - the consumer links and runs without a GPU
+#
+# Usage: bx test-install.bx <scratch-dir> <toolkit-dir>
+#
+# <scratch-dir> is wiped on entry and left behind for inspection. Pass a path
+# outside the repository.
+
+if ($size($*) != 3)
+  exit "usage: bx test-install.bx <scratch-dir> <toolkit-dir>"
+
+src     = [dir_path] $normalize($complete($directory($0)))
+scratch = [dir_path] $normalize($complete([dir_path] ($*[1])))
+tk      = [dir_path] $normalize($complete([dir_path] ($*[2])))
+
+test -f $src/packages.manifest || exit "$src is not a package repository"
+test -f $tk/packages.manifest || exit "$tk is not a package repository"
+
+if ($string.replace("$scratch", "$src", '') != "$scratch")
+  exit "scratch directory must be outside $src"
+
+win = [bool] ($getenv(OS) == 'Windows_NT')
+exe = [string] ($win ? '.exe' : '')
+
+# The bare name b resolves through $build.path, which a bx script leaves empty.
+#
+drv = [cmdline] ($win ? b.exe : b)
+
+# The package.json platform key. The buildfiles take it from $cc.target, which
+# is not known here.
+#
+if $win
+  plat = [string] 'x86_64-windows'
+else
+{
+  uname -m | set arch [string]
+  plat = [string] "$arch-linux"
+}
+
+prefix  = [dir_path] $scratch/install/
+consume = [dir_path] $scratch/consume/
+
+# Every package of both repositories, and the libraries ours declare for this
+# platform.
+#
+dirs    = [dir_paths]
+libs    = [strings]
+imports = [cmdline]
+
+for r: [dir_paths] $src $tk
+{
+  sed -n -e 's%^location: *(.+)/ *$%\1%p' $r/packages.manifest | for -n l
+  {
+    test -f $r/$l/manifest || exit "no manifest in $r/$l"
+
+    # Unconfigured, b install would build in the work tree and put the archive
+    # cache inside the checkout.
+    #
+    test -f $r/$l/build/bootstrap/out-root.build || \
+      exit "$r/$l is not configured, run bdep init first"
+
+    dirs += $r/$l
+
+    # Resolve the toolkit imports to the checkout under test rather than to
+    # whatever bpkg last cached for this configuration.
+    #
+    if ($r != $src)
+    {
+      iv = [string] $string.replace($l, '-', '_')
+      imports += "config.import.$iv=$r/$l"
+    }
+
+    if ($r == $src)
+    {
+      j  = [json_object] $json.load($r/$l/$l/package.json)
+      ps = [json_object] ($j["platforms"])
+      s  = ($ps[$plat])
+
+      if $null($s)
+        exit "$l/package.json declares no $plat section"
+
+      for m: [json_object] (([json_object] $s)["libs"])
+        libs += $member_name($m)
+    }
+  }
+}
+
+rm -r -f $scratch
+mkdir -p $scratch
+
+echo "installing into $prefix"
+
+# ! because the imported toolkit packages are separate projects.
+#
+$drv "!config.install.root=$prefix" $imports install: $dirs
+
+# The extensionless spelling is what a fabricated empty executable looks like
+# on Windows, and it would clobber the real one in a shared prefix.
+#
+test -f $prefix/bin/trtexec$exe || exit "trtexec$exe was not installed"
+if ($win && $file_exists($prefix/bin/trtexec))
+  exit "an extensionless bin/trtexec was installed"
+
+# No poptions: the include directories have to come from the installed pc
+# files. No exes either, an install tree gives them no pkg-config lookup.
+#
+echo "consuming the installed libraries"
+mkdir -p $consume/build
+
+cat <<EOI >=$consume/build/bootstrap.build
+project = consume
+
+using config
+EOI
+
+cat <<EOI >=$consume/build/root.build
+using cxx
+EOI
+
+# consume calls into nvinfer and nvonnxparser. The rest are alternative
+# runtimes that export the same symbols, so they cannot share a link line and
+# get one empty probe each instead. A probe rather than a bare ./: because an
+# imported library reached only through an alias never goes through the cc
+# library search, and so fails to import whatever the prefix holds.
+#
+echo "link = [names]" >=$consume/buildfile
+for l: $libs
+{
+  if ($l == 'nvinfer' || $l == 'nvonnxparser')
+    echo "import link += libtensorrt%lib{$l}" >+$consume/buildfile
+  else
+  {
+    cat <<EOI >=$consume/probe-$(l).cxx
+int main () { return 0; }
+EOI
+    echo "import probe_$l = libtensorrt%lib{$l}" >+$consume/buildfile
+    echo "./: exe{probe-$l}: cxx{probe-$l} \$probe_$l" >+$consume/buildfile
+  }
+}
+echo './: exe{consume}: cxx{consume} $link' >+$consume/buildfile
+
+cat <<EOI >=$consume/consume.cxx
+#include <NvInfer.h>
+#include <NvOnnxParser.h>
+#include <cuda_runtime_api.h>
+
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+
+#include <cassert>
+#include <stdio.h>
+
+int main ()
+{
+  int v = getInferLibVersion ();
+  assert (v != 0);
+  printf ("consume - getInferLibVersion(): %d\n", v);
+
+  v = getNvOnnxParserVersion ();
+  assert (v != 0);
+  printf ("consume - getNvOnnxParserVersion(): %d\n", v);
+
+  /* No GPU is not a failure, the point is that cudart links and runs. */
+  int count = 0;
+  if (cudaGetDeviceCount (&count) == cudaSuccess)
+    printf ("consume - cudaGetDeviceCount(): %d\n", count);
+  else
+    printf ("consume - cudaGetDeviceCount(): no device\n");
+
+  return 0;
+}
+EOI
+
+lopt = [string] ($win ? "/LIBPATH:$prefix/lib" : "-L$prefix/lib")
+
+cfgopts = [cmdline] "config.cc.loptions=$lopt"
+if (!$win)
+  cfgopts += "config.bin.rpath=$prefix/lib"
+
+$drv $cfgopts configure: $consume
+$drv $consume
+
+if $win
+  env "PATH=$prefix/bin;$getenv(PATH)" -- $consume/consume$exe
+else
+  $consume/consume
+
+echo "ok"

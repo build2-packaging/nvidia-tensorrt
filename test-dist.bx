@@ -1,0 +1,171 @@
+#! /usr/bin/env bx
+
+# Build each package from its own source distribution, the way cppget.org
+# does. Run before publishing, with test-install.bx.
+#
+# Catches what a development configuration hides. A file reaches the
+# distribution only by being in the build graph, so a missing manifest.json
+# passes every other test. Targets unreachable from ./: are never built. Clean
+# rules for targets reached through a non-./: declaration, which is how the
+# library targets are wired, are never exercised. A missing fsdir{} chain goes
+# unnoticed, since auto-creation is out of tree only and this project is
+# normally forwarded.
+#
+# This repository depends on nvidia-cuda-toolkit, so that checkout is the
+# second argument. Its packages are distributed and configured into the same
+# scratch directory and imported from there, never from a development tree.
+# They are not built or tested here, the toolkit has its own script for that.
+#
+# Strict warnings here only, never in the packages, so that whatever the
+# upstream headers trigger surfaces.
+#
+# Usage: bx test-dist.bx <scratch-dir> <toolkit-dir>
+#
+# <scratch-dir> is wiped on entry and left behind for inspection. Pass a path
+# outside the repository.
+
+if ($size($*) != 3)
+  exit "usage: bx test-dist.bx <scratch-dir> <toolkit-dir>"
+
+src     = [dir_path] $normalize($complete($directory($0)))
+scratch = [dir_path] $normalize($complete([dir_path] ($*[1])))
+tk      = [dir_path] $normalize($complete([dir_path] ($*[2])))
+
+test -f $src/packages.manifest || exit "$src is not a package repository"
+test -f $tk/packages.manifest || exit "$tk is not a package repository"
+
+if ($string.replace("$scratch", "$src", '') != "$scratch")
+  exit "scratch directory must be outside $src"
+
+win = [bool] ($getenv(OS) == 'Windows_NT')
+
+# The bare name b resolves through $build.path, which a bx script leaves empty.
+#
+drv = [cmdline] ($win ? b.exe : b)
+
+# Picked from the host OS, not the compiler, which is not known until
+# configure. Wrong for clang or mingw on Windows.
+#
+warn = [string] ($win ? '/W4 /permissive-' : '-Wall -Wextra -pedantic')
+
+# A package directory doubles as its name below, so hold the manifests to it.
+# Ours first, then the toolkit's, which only ever get distributed.
+#
+sed -n -e 's%^location: *(.+)/ *$%\1%p' $src/packages.manifest | set -n pkgs [strings]
+sed -n -e 's%^location: *(.+)/ *$%\1%p' $tk/packages.manifest | set -n deps [strings]
+
+for p: $pkgs
+{
+  test -f $src/$p/manifest || exit "no manifest in $p"
+  sed -n -e 's/^name: *(.+)$/\1/p' $src/$p/manifest | set n [string]
+  if ($n != $p)
+    exit "$p/manifest declares name $n, expected the directory name"
+}
+
+for p: $deps
+{
+  test -f $tk/$p/manifest || exit "no manifest in $tk/$p"
+  sed -n -e 's/^name: *(.+)$/\1/p' $tk/$p/manifest | set n [string]
+  if ($n != $p)
+    exit "$tk/$p/manifest declares name $n, expected the directory name"
+  if ($directory_exists($src/$p/))
+    exit "$p is in both repositories"
+  pkgs += $p
+}
+
+rm -r -f $scratch
+mkdir -p $scratch
+
+# Handle a package once every package it depends on has been distributed. Its
+# distribution directory is the done marker, so there is nothing to track.
+# $size($pkgs) passes suffice for an acyclic graph.
+#
+# Every distribution is configured, the toolkit's included, because a
+# package resolves its own imports from its own configuration. Each one
+# therefore only needs its direct dependencies named here.
+#
+for i: $integer_sequence(0, $size($pkgs))
+{
+  for p: $pkgs
+  {
+    mine = [bool] $directory_exists($src/$p/)
+    root = [dir_path] ($mine ? $src/$p/ : $tk/$p/)
+
+    sed -n -e 's/^version: (.+)$/\1/p' $root/manifest | set v [string]
+    d = [dir_path] $scratch/$p-$v/
+
+    if (!$directory_exists($d))
+    {
+      ready   = [bool] true
+      imports = [cmdline]
+
+      # depends: * ... are tools, the rest are packages in one of the two
+      # repositories.
+      #
+      sed -n -e 's/^depends: +([^* ][^ ]*).*$/\1/p' $root/manifest | for -n dp
+      {
+        droot = [dir_path] ($directory_exists($src/$dp/) ? $src/$dp/ : $tk/$dp/)
+        test -f $droot/manifest || exit "$p depends on $dp, not in $src or $tk"
+
+        sed -n -e 's/^version: (.+)$/\1/p' $droot/manifest | set dv [string]
+        dd = [dir_path] $scratch/$dp-$dv/
+
+        if ($directory_exists($dd))
+        {
+          iv = [string] $string.replace($dp, '-', '_')
+          imports += "config.import.$iv=$dd"
+        }
+        else
+          ready = [bool] false
+      }
+
+      if $ready
+      {
+        echo "$p"
+
+        # using version refuses to distribute a dirty work tree otherwise.
+        #
+        $drv "config.dist.root=$scratch" config.dist.uncommitted=true dist: $root
+
+        # Also catches a bad version parse above, which yields $p-/.
+        #
+        test -d $d || exit "no $p-$v distribution in $scratch"
+
+        if $mine
+        {
+          # .gitignore is never in the build graph.
+          #
+          git -C $src ls-files $p | for -n f
+          {
+            if ($leaf([path] $f) != '.gitignore')
+            {
+              rel = $leaf([path] $f, [dir_path] $p)
+              test -f $d/$rel || exit "missing from the $p distribution: $rel"
+            }
+          }
+        }
+
+        # config.cc.coptions rather than the per-module ones: a package and
+        # its tests subproject do not always load the same module, and cc is
+        # loaded by both c and cxx.
+        #
+        $drv "config.cc.coptions=$warn" $imports configure: $d
+
+        if $mine
+        {
+          $drv test: $d
+          $drv clean: $d
+        }
+      }
+    }
+  }
+}
+
+for p: $pkgs
+{
+  root = [dir_path] ($directory_exists($src/$p/) ? $src/$p/ : $tk/$p/)
+  sed -n -e 's/^version: (.+)$/\1/p' $root/manifest | set v [string]
+  test -d $scratch/$p-$v/ || exit "$p was never reached, dependency cycle?"
+}
+
+echo "ok"
