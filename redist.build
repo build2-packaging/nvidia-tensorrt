@@ -76,6 +76,7 @@ extract{~'/(.+)/'}:
     $extract_exclude \
     "*/*/*"
 
+  # grep is not a build2 builtin, so the directory filter is in the sed.
   depdb dyndep \
     --dyn-target \
     --target-cwd "$o" \
@@ -123,6 +124,23 @@ extract{~'/(.+)/'}:
   }
 
   touch $d
+}}
+
+# The prebuilt executables. Nothing is produced here: the extraction above
+# already wrote the file, and this only stamps it. Fail if it is missing,
+# because touch would otherwise create a plausible-looking empty executable
+# that goes on to clobber the real one when several of these packages are
+# installed into a shared prefix.
+#
+exe{~'/(.+)/'}:
+{{
+  diag import $> $<
+
+  test -f $path($>) || exit "no such extracted file; check this executable's exes path in package.json"
+
+  # Any rpath these need was patched in at extraction, see extract_bin_rpath.
+  #
+  touch $path($>)
 }}
 
 # Linux: install versioned SONAME companions alongside the base .so.

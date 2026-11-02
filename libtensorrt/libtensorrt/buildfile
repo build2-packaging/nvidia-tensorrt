@@ -231,12 +231,6 @@ for plat: [json_object] ($json["platforms"])
   }
 }
 
-exe{~'/(.+)/'}:
-{{
-  diag import $> $<
-  touch $path($>)
-}}
-
 lib/liba{**}: install = false
 
 include/h{**}:
