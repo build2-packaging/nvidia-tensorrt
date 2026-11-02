@@ -35,7 +35,7 @@ depends: libtensorrt ^10.16.1
 Then import the library in your `buildfile`:
 
 ```
-import libs = libtensorrt%libs{nvinfer}
+import libs = libtensorrt%lib{nvinfer}
 ```
 
 
@@ -44,16 +44,16 @@ import libs = libtensorrt%libs{nvinfer}
 This package provides the following importable targets:
 
 ```
-libs{nvinfer}            # core builder and runtime (main TensorRT API)
-libs{nvinfer_plugin}     # standard built-in op plugins (batch norm, RNN cells, etc.)
-libs{nvinfer_lean}       # runtime-only nvinfer without the builder, smaller footprint
-libs{nvinfer_dispatch}   # forward-compatible dispatch shim, delegates to the installed lean runtime
-libs{nvinfer_vc_plugin}  # version-compatible plugin library, pairs with nvinfer_dispatch
-libs{nvonnxparser}       # ONNX parser, converts .onnx graphs into TensorRT networks
-libs{tensorrt_shim}      # capture shim, records engine-build API calls for replay
+lib{nvinfer}            # core builder and runtime (main TensorRT API)
+lib{nvinfer_plugin}     # standard built-in op plugins (batch norm, RNN cells, etc.)
+lib{nvinfer_lean}       # runtime-only nvinfer without the builder, smaller footprint
+lib{nvinfer_dispatch}   # forward-compatible dispatch shim, delegates to the installed lean runtime
+lib{nvinfer_vc_plugin}  # version-compatible plugin library, pairs with nvinfer_dispatch
+lib{nvonnxparser}       # ONNX parser, converts .onnx graphs into TensorRT networks
+lib{tensorrt_shim}      # capture shim, records engine-build API calls for replay
 ```
 
-`libs{tensorrt_shim}` is only available on Linux.
+`lib{tensorrt_shim}` is only available on Linux.
 
 It also provides the following importable executables:
 

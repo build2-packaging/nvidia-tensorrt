@@ -1,5 +1,5 @@
-import libs    = libtensorrt%libs{nvinfer} \
-                 libtensorrt%libs{nvonnxparser}
+import libs    = libtensorrt%lib{nvinfer} \
+                 libtensorrt%lib{nvonnxparser}
 # make sure executables are importable
 import trtexec = libtensorrt%exe{trtexec}
 
