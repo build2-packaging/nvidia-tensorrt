@@ -3,6 +3,7 @@
     "x86_64-windows": {
       "libs": {
         "nvinfer": {
+          "linkage": "shared",
           "linked": [
             {
               "dll": "bin/nvinfer_10.dll",
@@ -26,6 +27,7 @@
           ]
         },
         "nvinfer_plugin": {
+          "linkage": "shared",
           "linked": [
             {
               "dll": "bin/nvinfer_plugin_10.dll",
@@ -42,6 +44,7 @@
           "runtime": []
         },
         "nvinfer_lean": {
+          "linkage": "shared",
           "linked": [
             {
               "dll": "bin/nvinfer_lean_10.dll",
@@ -56,6 +59,7 @@
           "runtime": []
         },
         "nvinfer_dispatch": {
+          "linkage": "shared",
           "linked": [
             {
               "dll": "bin/nvinfer_dispatch_10.dll",
@@ -70,6 +74,7 @@
           "runtime": []
         },
         "nvinfer_vc_plugin": {
+          "linkage": "shared",
           "linked": [
             {
               "dll": "bin/nvinfer_vc_plugin_10.dll",
@@ -84,6 +89,7 @@
           "runtime": []
         },
         "nvonnxparser": {
+          "linkage": "shared",
           "linked": [
             {
               "dll": "bin/nvonnxparser_10.dll",
@@ -110,6 +116,7 @@
     "x86_64-linux": {
       "libs": {
         "nvinfer": {
+          "linkage": "shared",
           "linked": [],
           "shared": [
             "lib/libnvinfer.so"
@@ -128,6 +135,7 @@
           ]
         },
         "nvinfer_plugin": {
+          "linkage": "shared",
           "linked": [],
           "shared": [
             "lib/libnvinfer_plugin.so"
@@ -139,6 +147,7 @@
           "runtime": []
         },
         "nvinfer_lean": {
+          "linkage": "shared",
           "linked": [],
           "shared": [
             "lib/libnvinfer_lean.so"
@@ -148,6 +157,7 @@
           "runtime": []
         },
         "nvinfer_dispatch": {
+          "linkage": "shared",
           "linked": [],
           "shared": [
             "lib/libnvinfer_dispatch.so"
@@ -157,6 +167,7 @@
           "runtime": []
         },
         "nvinfer_vc_plugin": {
+          "linkage": "shared",
           "linked": [],
           "shared": [
             "lib/libnvinfer_vc_plugin.so"
@@ -166,6 +177,7 @@
           "runtime": []
         },
         "nvonnxparser": {
+          "linkage": "shared",
           "linked": [],
           "shared": [
             "lib/libnvonnxparser.so"
@@ -175,6 +187,7 @@
           "runtime": []
         },
         "tensorrt_shim": {
+          "linkage": "shared",
           "linked": [],
           "shared": [
             "lib/libtensorrt_shim.so"

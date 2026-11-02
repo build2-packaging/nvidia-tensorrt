@@ -85,14 +85,89 @@ for plat: [json_object] ($json["platforms"])
     n = $member_name($m)
     v = [json_object] ($member_value($m))
 
-    ./: libs{$n}:
+    # What the binary installed under this library's name actually is. It
+    # cannot be derived from the file names: NVIDIA ships both real import
+    # libraries and static archives of loader shims as lib/<name>.lib. build2
+    # classifies the installed file by looking inside it, and the variant
+    # declared here has to reach the same answer. If it does not, build2
+    # manufactures a binless placeholder for the variant it cannot find, which
+    # switches off the self -l skip when the generated pc file is loaded and
+    # leaves the library its own prerequisite. See README-DEV.md.
+    #
+    linkage = [string] ($v["linkage"])
+
+    assert ($linkage == 'shared' || $linkage == 'static' || \
+            $linkage == 'binless') \
+      "package.json: $plat_key $n linkage is not shared, static or binless"
+
+    is_shared = [bool] ($linkage == 'shared')
+    is_static = [bool] ($linkage == 'static')
+
+    # build2 identifies this library's own entry in the generated pc file by
+    # position, the first -l in Libs. The linked and shared loops prepend, so
+    # for a library that has neither, that entry is the first archive and it
+    # has to be this library's own.
+    #
+    ar0 = [string] ''
+    has_link = [bool] false
+    for x: [json_array] ($v["linked"])
+      has_link = [bool] true
+    for x: [json_array] ($v["shared"])
+      has_link = [bool] true
+    for x: [json_array] ($v["archives"])
     {
-      include = $enabled
+      if ($ar0 == '')
+        ar0 = [string] $base($leaf([path] ([string] $x)))
+    }
+
+    if ($is_static && !$has_link)
+      assert ($ar0 == ($regex.match($plat_key, '.+-windows') ? "$n" : "lib$n")) \
+        "package.json: $plat_key $n archives[0] is not its own archive"
+
+    # Keep clean = false. The prebuilt binaries below are declared targets
+    # that no rule matches for clean, so cleaning through this library fails
+    # with "no rule to clean ...". See build2 issue 463.
+    #
+    # Cost: b clean leaves the extracted payload in place (the downloaded
+    # archives are unaffected, see README-DEV.md).
+    #
+    # Each platform section declares all three, so the build graph stays the
+    # same in every configuration. Only the include values differ.
+    #
+    ./: lib{$n}:
+    {
+      include = ($enabled && !$is_shared && !$is_static)
       clean   = false
     }
+    ./: liba{$n}:
+    {
+      include = ($enabled && $is_static)
+      clean   = false
+    }
+    ./: libs{$n}:
+    {
+      include = ($enabled && $is_shared)
+      clean   = false
+    }
+
+    # An importer picks the group member according to its own bin.lib, not
+    # ours, so the variant that does not match here still gets built and
+    # installed by anyone who depends on us. Its pc file would then sit next
+    # to the right one and bring the placeholder back, so rename it out of the
+    # way instead of suppressing it: for a binless member bin.lib.suffix feeds
+    # nothing but the pc file name, since there is no binary of its own, and
+    # the library itself stays installable. Only the section for the platform
+    # being built may say this, the other section describes a platform where
+    # the other variant is the right one.
+    #
+    if ($enabled && $is_shared)
+      liba{$n}: bin.lib.suffix = '-unused'
+    if ($enabled && $is_static)
+      libs{$n}: bin.lib.suffix = '-unused'
+
     [rule_hint=cxx.link] \
-    libs{$n}: import{$name-headers}: \
-              extract{$name}:
+    lib{$n}: import{$name-headers}: \
+             extract{$name}:
     {
       include = $enabled
       update  = match
@@ -106,10 +181,10 @@ for plat: [json_object] ($json["platforms"])
         libi += [paths] $out_base/$x
 
       <libs{$dll} libi{$libi}>: extract{$name}: include = $enabled
-      libs{$n}: libs{$dll}: include = $enabled
+      lib{$n}: libs{$dll}: include = $enabled
       if $enabled
       {
-        libs{$n}:
+        lib{$n}:
         {
           cc.export.libs =+ libs{$dll}
         }
@@ -120,12 +195,12 @@ for plat: [json_object] ($json["platforms"])
     {
       so = [path] $out_base/$s
       <libs{$so}>: extract{$name}: include = $enabled
-      libs{$n}: libs{$so}: include = $enabled
+      lib{$n}: libs{$so}: include = $enabled
       if $enabled
       {
         if ($cc.target.class != 'windows')
         {
-          libs{$n}:
+          lib{$n}:
           {
             cc.export.libs =+ libs{$so}
           }
@@ -138,27 +213,27 @@ for plat: [json_object] ($json["platforms"])
     {
       so = [path] $out_base/$r
       <libs{$so}>: extract{$name}: include = $enabled
-      libs{$n}: libs{$so}: include = $enabled
+      lib{$n}: libs{$so}: include = $enabled
     }
 
     for a: [json_array] ($v["archives"])
     {
       ar = [path] $out_base/$a
       <liba{$ar}>: extract{$name}: include = $enabled
-      libs{$n}: liba{$ar}: include = $enabled
+      lib{$n}: liba{$ar}: include = $enabled
       if $enabled
       {
-        libs{$n}: cc.export.libs += liba{$ar}
+        lib{$n}: cc.export.libs += liba{$ar}
       }
     }
 
     for d2: [json_array] ($v["depends"])
     {
       dep = [name] $d2
-      libs{$n}: libs{$dep}: include = $enabled
+      lib{$n}: lib{$dep}: include = $enabled
       if $enabled
       {
-        libs{$n}: cc.export.libs += libs{$dep}
+        lib{$n}: cc.export.libs += lib{$dep}
       }
     }
 
@@ -171,21 +246,21 @@ for plat: [json_object] ($json["platforms"])
       {
         file{$res}: install = $directory([dir_path] $r)/
       }
-      libs{$n}: file{$res}: include = $enabled
+      lib{$n}: file{$res}: include = $enabled
     }
 
-    libs{$n}: $intf_libs: include = $enabled
+    lib{$n}: $intf_libs: include = $enabled
     if $enabled
     {
-      libs{$n}: cc.export.libs += $intf_libs
+      lib{$n}: cc.export.libs += $intf_libs
     }
 
-    libs{$n}:
+    lib{$n}:
     {
       cc.type            = cc
       cc.export.poptions = $pub_hdrs
     }
-    libs{$n}: cc.pkgconfig.include = $pub_incs
+    lib{$n}: cc.pkgconfig.include = $pub_incs
   }
 
   for m: [json_object] ($plat_val["exes"])
@@ -220,8 +295,10 @@ for plat: [json_object] ($json["platforms"])
     {
       dep = [name] $d2
       # install=false works around a build2 access violation installing an
-      # exe{} with an ad hoc libs{} prerequisite (0.18.1, 0.19.0-a.0).
-      exe{$t}: libs{$dep}:
+      # exe{} with an ad hoc lib{} prerequisite (0.18.1, 0.19.0-a.0). Still
+      # needed with the group rather than the member: b install segfaults
+      # without it.
+      exe{$t}: lib{$dep}:
       {
         include = $enabled
         clean = false
