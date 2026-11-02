@@ -9,12 +9,6 @@ cxx{*}: extension = cpp
 
 legal{*}: backlink = false
 
-# Since the executables are prebuilt, the normally run link-rule never
-# assigns it explicitly. Let's be explicit here and in package.json.
-#
-if ($cc.target.class == 'windows')
-  exe{*}: extension = exe
-
 config [dir_path] config.libtensorrt.cache ?= \
   (!$null($config.tensorrt.cache) ? $config.tensorrt.cache : $out_root)
 

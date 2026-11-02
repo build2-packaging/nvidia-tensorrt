@@ -43,6 +43,13 @@ archive{~'/(.+)/'}:
   touch $path($>)
 }}
 
+# Platform extension for the prebuilt executables. This mirrors what the cc
+# link rule derives for exe{} when a program is built from source: the
+# extension follows the target platform, not the program. exe{} never
+# consults the `extension` variable, so it has to be part of the target name.
+#
+redist_exe_ext = [string] ($cc.target.class == 'windows' ? '.exe' : '')
+
 # Per-package extra exclusions for extraction (override after sourcing this file).
 extract_exclude = [cmdline]
 
