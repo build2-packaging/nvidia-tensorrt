@@ -9,9 +9,6 @@
     },
     "x86_64-linux": {
       "relativePath": "tensorrt/10.16.1/tars/TensorRT-10.16.1.11.Linux.x86_64-gnu.cuda-12.9.tar.gz"
-    },
-    "aarch64-linux": {
-      "relativePath": "tensorrt/10.16.1/tars/TensorRT-10.16.1.11.Linux.aarch64-gnu.cuda-12.9.tar.gz"
     }
   }
 }
