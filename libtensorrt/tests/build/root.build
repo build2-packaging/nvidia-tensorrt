@@ -4,6 +4,6 @@ using cxx
 #
 exe{*}: test = true
 
-# Don't install tests
+# The test target for cross-testing (running tests under Wine, etc).
 #
-exe{*}: install = false
+test.target = $cc.target
