@@ -1,13 +1,13 @@
 # NVIDIA® TensorRT™ SDK
 
 > **NOTE:**  
-These packages are not open source and do not contain any source code. Instead,
-in order to "build" the exported target(s) they download (potentially large)
-pre-built binaries provided by NVIDIA for the target platform.
+> These packages are not open source and do not contain any source code. Instead,
+> in order to "build" the exported target(s) they download (potentially large)
+> pre-built binaries provided by NVIDIA for the target platform.
 >
 > CI for these packages are disabled due to the above.  
-Supported platforms/compilers are Windows/MSVC and Linux/GCC or Clang
-(x86_64).
+> Supported platforms/compilers are Windows/MSVC and Linux/GCC or Clang
+> (x86_64).
 
 This is a `build2` package repository for [NVIDIA® TensorRT™ SDK](https://developer.nvidia.com/tensorrt).
 
@@ -39,3 +39,6 @@ bdep init -C @gcc cc config.cxx=g++
 bdep update
 bdep test
 ```
+
+For how the package is put together and what to run before publishing, see
+[`README-DEV.md`](README-DEV.md).
