@@ -11,7 +11,6 @@ description-file: README.md
 url: https://developer.download.nvidia.com/compute/machine-learning
 email: NVSDKIssues@nvidia.com
 package-email: packaging@build2.org ; Mailing list.
-build-error-email: helmesjo@gmail.com
 builds: none; Times out downloading large binaries
 depends: * build2 >= 0.18.0
 depends: * bpkg >= 0.18.0
