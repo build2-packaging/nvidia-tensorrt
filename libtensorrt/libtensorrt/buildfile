@@ -131,22 +131,13 @@ for plat: [json_object] ($json["platforms"])
     # Cost: b clean leaves the extracted payload in place (the downloaded
     # archives are unaffected, see README-DEV.md).
     #
-    # Each platform section declares all three, so the build graph stays the
-    # same in every configuration. Only the include values differ.
+    # The group, not a member: bin.lib selects which members are built and
+    # installed, and bin.lib.suffix below renames the one that does not match
+    # this library's linkage.
     #
     ./: lib{$n}:
     {
-      include = ($enabled && !$is_shared && !$is_static)
-      clean   = false
-    }
-    ./: liba{$n}:
-    {
-      include = ($enabled && $is_static)
-      clean   = false
-    }
-    ./: libs{$n}:
-    {
-      include = ($enabled && $is_shared)
+      include = $enabled
       clean   = false
     }
 
