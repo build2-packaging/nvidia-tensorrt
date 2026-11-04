@@ -1,0 +1,11 @@
+: 1
+name: libtensorrt
+version: 10.16.1+3
+upstream-version: 10.16.1.11
+type: lib,binless
+language: c++
+project: nvidia-tensorrt
+summary: C++ library for high-performance deep learning inference on NVIDIA\
+ GPUs
+license: other: proprietary; NVIDIA Software License Agreement, see\
+ https://docs.nvidia.com/deeplearning/tensorrt/latest/reference/sla.html
